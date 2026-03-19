@@ -1,17 +1,60 @@
 package com.korealm;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    static void main() {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        IO.println(String.format("Hello and welcome!"));
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            IO.println("i = " + i);
+public class Main {
+    static boolean hadError = false;
+
+    static void main(String[] args) throws IOException {
+        if (args.length < 1) {
+            IO.println("Sage: jlox [script]");
+            System.exit(64);
+        } else if (args.length == 1) {
+            runFile(args[0]);
+        } else {
+            runPrompt();
         }
+    }
+
+    private static void runFile(String path) throws IOException {
+        byte[] bytes = Files.readAllBytes(Paths.get(path));
+        run(new String(bytes, Charset.defaultCharset()));
+        if (hadError) System.exit(65);
+    }
+
+    private static void runPrompt() throws IOException {
+        var reader = new BufferedReader(new InputStreamReader(System.in));
+
+        for (;;) {
+            IO.print("> ");
+            String line = reader.readLine();
+
+            if (line == null) return;
+
+            run(line);
+            hadError = false;
+        }
+    }
+
+    private static void run(String source) {
+        Scanner scanner = new Scanner(source);
+        List<Token> tokens = scanner.scanTokens();
+
+        tokens.forEach(IO::println);
+    }
+
+    static void error(int line, String message) {
+        report(line, "", message);
+    }
+
+    static void report(int line, String where, String message) {
+        IO.println("[line " + line + "] Error" + where + ": " + message);
+        hadError = true;
     }
 }
